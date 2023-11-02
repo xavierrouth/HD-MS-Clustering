@@ -1,0 +1,10 @@
+*.txt
+host-normal
+host-cpu
+host-fpga
+*.aoco
+*.temp
+dump*
+
+*.dot
+tmp
