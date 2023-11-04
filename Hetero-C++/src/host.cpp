@@ -11,15 +11,7 @@
 #include <cmath>
 
 
-#define HAMMING_DIST
 #define OFFLOAD_RP_GEN
-
-
-#ifdef HAMMING_DIST
-#define SCORES_TYPE hvtype
-#else
-#define SCORES_TYPE float
-#endif
 
 
 #define DUMP(vec, suffix) {\
@@ -72,21 +64,68 @@ int main(int argc, char** argv)
 	int EPOCH = std::atoi(argv[1]);
    
 	std::vector<int> X_data;
-	datasetBinaryRead(X_data, X_data_path);
+	
+	std::ifstream file_(X_data_path, std::ios::in | std::ios::binary);
+	assert(file_.is_open() && "Couldn't open file!");
+	unsigned char temp;
 
+	for(int i = 0; i < 256 * 258; i++){
+		file_.read((char*)&temp, sizeof(temp));
+		for (int i = 7; i >= 0; i--) // or (int i = 0; i < 8; i++)  if you want reverse bit order in bytes
+        	X_data.push_back(((temp >> i) & 1));
+		
+	}
+	file_.close();
+
+
+	std::vector<int> labels_vec;
+	#if 0
+	std::ifstream file2(y_data_path);
+	assert(file2.is_open() && "Couldn't open file!");
+
+	int a; 
+
+	for (int i = 0; i < 258; i++){
+		//file2 >> a;
+		//labels_vec[i];
+	}
+	
+	file2.close();
+	#endif
+	// Read labels
+	for (int i = 0; i < 258; i++ )  {
+		std::cout << labels_vec[i] << " ";
+	}
+	
+
+	
 	std::cout << "Read Data Starting" << std::endl;
 	//srand (time(NULL));
 
-	std::cout << "size: " << X_data.size() / Dhv<< std::endl;
-	assert(N_FEAT == X_data.size() / Dhv);
+	std::cout << "# hypervectors: " << X_data.size() / Dhv << std::endl;
+	assert(N_SAMPLE == X_data.size() / Dhv);
 
-	int labels[N_FEAT];
-	size_t labels_size = N_FEAT * sizeof(int);
+	// Read first hypervector
+	for (int i = 0; i < 2048; i++ ) {
+		std::cout << X_data[i] << " ";
+	}
 
-	std::vector<hvtype> tempVec(X_data.begin(), X_data.end());
+	// Read secpmd hypervector
+	for (int i = 0 + 2048; i < 2048 + 2048; i++ ) {
+		std::cout << X_data[i] << " ";
+	}
 
 	
-	hvtype* input_vectors = tempVec.data();
+
+	std::cout << std::endl;
+
+	int labels[N_SAMPLE];
+	size_t labels_size = N_SAMPLE * sizeof(int);
+
+	std::vector<hvtype> dataset_vec(X_data.begin(), X_data.end());
+
+	
+	hvtype* input_vectors = dataset_vec.data();
 
 	auto t_elapsed = std::chrono::high_resolution_clock::now() - t_start;
 	long mSec = std::chrono::duration_cast<std::chrono::milliseconds>(t_elapsed).count();
@@ -136,7 +175,7 @@ int main(int argc, char** argv)
 	// ========== Initialize cluster hvs =============== .
 	std::cout << "Init cluster hvs:" << std::endl;
 	for (int k = 0; k < N_CENTER; k++) {
-		__hypervector__<Dhv, hvtype> encoded_cluster_hv = __hetero_hdc_create_hypervector<Dhv, hvtype>(1, (void*) read_encoded_hv<hvtype>, input_vectors + k * ENCODED_HV_SIZE_PAD);
+		__hypervector__<Dhv, hvtype> encoded_cluster_hv = __hetero_hdc_create_hypervector<Dhv, hvtype>(1, (void*) read_encoded_hv<hvtype>, input_vectors + k * 2048);
 
 		std::cout <<" Cluster "<< k << "\n";
 
@@ -163,15 +202,16 @@ int main(int argc, char** argv)
 		std::cout << "Epoch: #" << i << std::endl;
 		for (int j = 0; j < N_SAMPLE; j++) {
 
-			__hypervector__<Dhv, hvtype> encoded_cluster_hv = __hetero_hdc_create_hypervector<Dhv, hvtype>(1, (void*) read_encoded_hv<hvtype>, input_vectors + j * ENCODED_HV_SIZE_PAD);
+			__hypervector__<Dhv, hvtype> encoded_cluster_hv = __hetero_hdc_create_hypervector<Dhv, hvtype>(1, (void*) read_encoded_hv<hvtype>, input_vectors + j * 2048);
 
+			//printf("read is good\n");
 			// Root node is: Encoding -> Clustering for a single HV.
 			void *DFG = __hetero_launch(
 				(void*) root_node<Dhv, N_CENTER>,
 				/* Input Buffers: 4*/ 7,
 				&clusters, clusters_size, //false,
 				&clusters_temp, clusters_size, //false,
-				encoded_hv_buffer, encoded_hv_size,// false,
+				&encoded_cluster_hv, encoded_hv_size,// false,
 				scores_buffer, scores_size,
                 update_hv_ptr, update_hv_size,
 				j, 

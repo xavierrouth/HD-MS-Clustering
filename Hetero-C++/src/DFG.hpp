@@ -4,14 +4,16 @@
 #include <heterocc.h>
 #include <iostream>
 
-//#define HAMMING_DIST
+#define HAMMING_DIST
+
+
 
 #undef D
 #undef N_FEATURES
 #undef K
 
 typedef int binary;
-typedef float hvtype;
+typedef int hvtype;
 
 
 #ifdef HAMMING_DIST
@@ -104,18 +106,24 @@ void __attribute__ ((noinline)) clustering_node(/* Input Buffers: 3*/
     SCORES_TYPE max_score = (SCORES_TYPE) elem_ptr[0];
     #endif
     
+    printf("pritngting scores: \n");
     for (int k = 0; k < K; k++) {
         #ifdef HAMMING_DIST
         SCORES_TYPE score = (SCORES_TYPE) D - elem_ptr[k];
+        printf("%d ", score);
         #else
         SCORES_TYPE score = (SCORES_TYPE) elem_ptr[k];
+        printf("%f ", score);
         #endif
+        
         if (score > max_score) {
             max_score = score;
             max_idx = k;
         }
         
     } 
+
+    printf("\n max idx: %d \n", max_idx);
     // Write labels
     //labels[encoded_hv_idx] = max_idx;
     *labels = max_idx;
