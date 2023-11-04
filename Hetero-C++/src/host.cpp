@@ -77,27 +77,27 @@ int main(int argc, char** argv)
 	}
 	file_.close();
 
-
+	
 	std::vector<int> labels_vec;
-	#if 0
+	
 	std::ifstream file2(y_data_path);
+	
 	assert(file2.is_open() && "Couldn't open file!");
-
+	
 	int a; 
 
 	for (int i = 0; i < 258; i++){
-		//file2 >> a;
-		//labels_vec[i];
+		file2 >> a;
+		labels_vec.push_back(a);
 	}
 	
+	
 	file2.close();
-	#endif
+	
 	// Read labels
 	for (int i = 0; i < 258; i++ )  {
 		std::cout << labels_vec[i] << " ";
 	}
-	
-
 	
 	std::cout << "Read Data Starting" << std::endl;
 	//srand (time(NULL));
@@ -245,7 +245,7 @@ int main(int argc, char** argv)
 	
 	std::ofstream myfile("out.txt");
 	for(int i = 0; i < N_SAMPLE; i++){
-		myfile << " " << labels[i] << std::endl;
+		myfile << labels_vec[i] << " " << labels[i] << std::endl;
 	}
 	__hpvm__cleanup();
 	return 0;

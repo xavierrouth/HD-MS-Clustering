@@ -4,7 +4,7 @@
 #include <heterocc.h>
 #include <iostream>
 
-#define HAMMING_DIST
+//#define HAMMING_DIST
 
 
 
@@ -13,7 +13,7 @@
 #undef K
 
 typedef int binary;
-typedef int hvtype;
+typedef float hvtype;
 
 
 #ifdef HAMMING_DIST
